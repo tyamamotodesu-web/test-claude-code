@@ -8,43 +8,48 @@ import pytesseract
 # Tesseractのパスを指定（Windows用）
 pytesseract.pytesseract.pytesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-# フォルダパス
-folder_path = Path.home() / "Dropbox/仙台/10 債務整理案件/30 破産/7 手代木　直輝（ABC紹介一般座）"
+# ベースフォルダパス
+base_folder = Path.home() / "Dropbox/仙台/10 債務整理案件/30 破産"
 
-if not folder_path.exists():
-    print(f"フォルダが見つかりません: {folder_path}")
+if not base_folder.exists():
+    print(f"フォルダが見つかりません: {base_folder}")
     sys.exit(1)
 
-print(f"処理開始: {folder_path}\n")
+print(f"処理開始: {base_folder}\n")
 
-# JPG/PNG ファイルをスキャン
-for filename in sorted(os.listdir(folder_path)):
-    if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
-        filepath = folder_path / filename
+count = 0
 
-        try:
-            # OCR実行
-            image = Image.open(filepath)
-            text = pytesseract.image_to_string(image, lang='jpn')
+# サブフォルダを走査
+for subfolder in base_folder.rglob('*'):
+    if subfolder.is_dir():
+        # JPG/PNG ファイルをスキャン
+        for filename in sorted(os.listdir(subfolder)):
+            if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
+                filepath = subfolder / filename
 
-            # 日付抽出（「YYYY年MM月DD日～YYYY年MM月DD日」形式）
-            date_pattern = r'(\d{4})年(\d{1,2})月(\d{1,2})日[～〜](\d{4})年(\d{1,2})月(\d{1,2})日'
-            match = re.search(date_pattern, text)
+                try:
+                    # OCR実行
+                    image = Image.open(filepath)
+                    text = pytesseract.image_to_string(image, lang='jpn')
 
-            if match:
-                y1, m1, d1, y2, m2, d2 = match.groups()
-                date_str = f"{y1}{m1:0>2}{d1:0>2}-{y2}{m2:0>2}{d2:0>2}"
-                new_filename = f"セブン銀行_{date_str}.jpg"
-                new_filepath = folder_path / new_filename
+                    # 日付抽出（「YYYY年MM月DD日～YYYY年MM月DD日」形式）
+                    date_pattern = r'(\d{4})年(\d{1,2})月(\d{1,2})日[～〜](\d{4})年(\d{1,2})月(\d{1,2})日'
+                    match = re.search(date_pattern, text)
 
-                # リネーム
-                filepath.rename(new_filepath)
-                print(f"✓ {filename}")
-                print(f"  → {new_filename}\n")
-            else:
-                print(f"✗ {filename} (日付が見つかりません)\n")
+                    if match:
+                        y1, m1, d1, y2, m2, d2 = match.groups()
+                        date_str = f"{y1}{m1:0>2}{d1:0>2}-{y2}{m2:0>2}{d2:0>2}"
+                        new_filename = f"セブン銀行_{date_str}.jpg"
+                        new_filepath = subfolder / new_filename
 
-        except Exception as e:
-            print(f"✗ {filename} (エラー: {e})\n")
+                        # リネーム
+                        filepath.rename(new_filepath)
+                        print(f"✓ {new_filename}")
+                        count += 1
+                    else:
+                        print(f"✗ {filename} (日付が見つかりません)")
 
-print("完了！")
+                except Exception as e:
+                    print(f"✗ {filename} (エラー: {e})")
+
+print(f"\n完了！{count}個のファイルをリネームしました。")
