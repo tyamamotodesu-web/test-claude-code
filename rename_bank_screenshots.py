@@ -9,7 +9,7 @@ import pytesseract
 pytesseract.pytesseract.pytesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 # ベースフォルダパス
-base_folder = Path.home() / "Dropbox/仙台/10 債務整理案件/30 破産"
+base_folder = Path.home() / "Desktop/リネーム実験場/セブン銀行"
 
 if not base_folder.exists():
     print(f"フォルダが見つかりません: {base_folder}")
